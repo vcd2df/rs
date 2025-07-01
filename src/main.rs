@@ -1,92 +1,25 @@
-// https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-use std::collections::BTreeMap;
-use polars::prelude::*;
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where P: AsRef<Path>, {
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
-
-fn vcd2pl() {
-    let name: Vec<String> = std::env::args().collect();
-    let name = name[1].clone(); //name[1].split(".").next().expect("Provide filename");
-    let mut lines = read_lines(name).expect("File DNE"); 
-    let mut names = BTreeMap::<String, String>::new();
-    let mut stage = 0;
-    // Stage 0: Read to `dumpvars`
-    while stage == 0 {
-        let line = lines.next().expect("VCD ill-formed wrt dumpvars.").expect("VCD ill-formed wrt lines.");
-        if line.trim() == "$dumpvars" {
-            stage = 1;
-        }
-        let mut splits = line.split(" ");
-        let word = splits.next().expect("VCD line ill-formed.");
-        if word == "$var" {
-            splits.next();
-            splits.next(); // Consume var/reg and size
-            names.insert(
-               String::from(splits.next().expect("Varname illformed")), // VCD nickname
-               String::from(splits.next().expect("Varname illformed")), // Verilog reg/var name
-            );
-        }
-    }
-    // Intermediate - stage the value storage
-    // We're going to use i64 to store 
-    // nullable u32s
-    let mut curr = BTreeMap::<String, i64>::new();
-    for (key, _) in &names {
-        curr.insert(
-            key.clone(),
-            -1,
-        );
-    }
-    let names: Vec<String> = names.into_values().collect();
-    let mut times: Vec<Column> = vec![Column::new("Names".into(), names)];
-    let mut time = String::from("#0");
-    // Stage 1: Read times into a BTreeMap
-    while let Some(Ok(line)) = lines.next() {
-        if line.chars().nth(0).expect("Line ill-formed") == '#' {
-            let tmp: Vec<i64> = curr.values().cloned().collect();
-            times.push(Column::new(time.into(), tmp));
-            time = String::from(&line);
-        }
-        // Two cases - singular or plural
-        if line.contains(char::is_whitespace) {
-            // Plural
-            let mut splits = line.split(" ");
-            let mut num = splits.next().unwrap().chars();
-            num.next(); // Clip the 'b'
-            let num = num.as_str();
-            let num = match i64::from_str_radix(num, 2) {
-                Ok(val) => val,
-                Err(_) => -1,
-            };
-            let reg = splits.next().unwrap();
-            if curr.contains_key(reg) {
-                curr.insert(String::from(reg), num);
-            }
-        } else {
-            let mut line = line.chars();
-            let num = match i64::from_str_radix(&line.next().unwrap().to_string(), 2) {
-                Ok(val) => val,
-                Err(_) => -1,
-            };
-            let reg = line.as_str();
-            if curr.contains_key(reg) {
-                curr.insert(String::from(reg), num);
-            }
-        }
-    }
-    let df = DataFrame::new(times);
-    dbg!(df);
-    // Stage 2: Get into an arrow format.
-    
-}    
+#![feature(test)]
+extern crate test;
+use rs::vcd2pl;
 
 fn main() {
-    vcd2pl();
+    let mut args: Vec<String> = std::env::args().collect();
+    if args.len() <= 1 {
+        panic!("Please provide a file as the first argument");
+    }
+
+    let name = args.remove(1);
+    vcd2pl(name);
+}
+
+#[cfg(test)]
+pub mod tests {
+    use rs::vcd2pl;
+    use test::Bencher;
+
+    #[bench]
+    fn testbench(b: &mut Bencher) {
+        let name = format!("{}/tests/testbench.vcd", env!("CARGO_MANIFEST_DIR"));
+        b.iter(|| vcd2pl(&name));
+    }
 }

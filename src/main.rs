@@ -1,6 +1,5 @@
-#![feature(test)]
-extern crate test;
 use rs::vcd2pl;
+use polars::prelude::*;
 
 fn main() {
     let mut args: Vec<String> = std::env::args().collect();
@@ -9,17 +8,8 @@ fn main() {
     }
 
     let name = args.remove(1);
-    vcd2pl(name);
-}
+    let mut df = vcd2pl(&name);
 
-#[cfg(test)]
-pub mod tests {
-    use rs::vcd2pl;
-    use test::Bencher;
-
-    #[bench]
-    fn testbench(b: &mut Bencher) {
-        let name = format!("{}/tests/testbench.vcd", env!("CARGO_MANIFEST_DIR"));
-        b.iter(|| vcd2pl(&name));
-    }
+    let mut file = std::fs::File::create(name.split(".").next().unwrap().to_owned() + ".parquet").unwrap();
+    ParquetWriter::new(&mut file).finish(&mut df).unwrap();
 }

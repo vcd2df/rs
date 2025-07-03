@@ -13,7 +13,7 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-pub fn vcd2pl<P: AsRef<Path>>(filename: P) {
+pub fn vcd2pl<P: AsRef<Path>>(filename: P) -> DataFrame {
     let mut lines = read_lines(filename).expect("File DNE");
     let mut names = BTreeMap::<String, String>::new();
     let mut stage = 0;
@@ -75,7 +75,5 @@ pub fn vcd2pl<P: AsRef<Path>>(filename: P) {
             }
         }
     }
-    let df = DataFrame::new(times);
-    dbg!(df);
-    // Stage 2: Get into an arrow format.
+    DataFrame::new(times).unwrap()
 }

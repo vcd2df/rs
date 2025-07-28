@@ -38,11 +38,11 @@ pub fn vcd2pl<P: AsRef<Path>>(filename: P) -> DataFrame {
         }
     }
     // Intermediate - stage the value storage
-    // We're going to use i64 to store
-    // nullable u32s
-    let mut curr = BTreeMap::<String, i64>::new();
+    // Polars can interpret integer options as nullable ints 
+    // Pico uses 32 bit, use 64 until we figure out to how to select.
+    let mut curr = BTreeMap::<String, Option<u64>>::new();
     for key in names.keys() {
-        curr.insert(key.clone(), -1);
+        curr.insert(key.clone(), None);
     }
     let names: Vec<String> = names.into_values().collect();
     let mut times: Vec<Column> = vec![Column::new("Names".into(), names)];
@@ -50,7 +50,7 @@ pub fn vcd2pl<P: AsRef<Path>>(filename: P) -> DataFrame {
     // Stage 1: Read times into a BTreeMap
     while let Some(Ok(line)) = lines.next() {
         if line.chars().nth(0).expect("Line ill-formed") == '#' {
-            let tmp: Vec<i64> = curr.values().cloned().collect();
+            let tmp: Vec<Option<u64>> = curr.values().cloned().collect();
             times.push(Column::new(time.into(), tmp));
             time = String::from(&line);
         }
@@ -61,14 +61,14 @@ pub fn vcd2pl<P: AsRef<Path>>(filename: P) -> DataFrame {
             let mut num = splits.next().unwrap().chars();
             num.next(); // Clip the 'b'
             let num = num.as_str();
-            let num = i64::from_str_radix(num, 2).unwrap_or(-1);
+            let num = u64::from_str_radix(num, 2).ok();
             let reg = splits.next().unwrap();
             if curr.contains_key(reg) {
                 curr.insert(String::from(reg), num);
             }
         } else {
             let mut line = line.chars();
-            let num = i64::from_str_radix(&line.next().unwrap().to_string(), 2).unwrap_or(-1);
+            let num = u64::from_str_radix(&line.next().unwrap().to_string(), 2).ok();
             let reg = line.as_str();
             if curr.contains_key(reg) {
                 curr.insert(String::from(reg), num);

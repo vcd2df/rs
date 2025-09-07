@@ -1,5 +1,5 @@
 [package]
-name = "rs"
+name = "vcd2df"
 version = "0.1.0"
 edition = "2024"
 

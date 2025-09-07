@@ -1,5 +1,5 @@
 use polars::prelude::*;
-use rs::vcd2pl;
+use vcd2df::vcd2df;
 
 fn main() {
     let mut args: Vec<String> = std::env::args().collect();
@@ -8,7 +8,7 @@ fn main() {
     }
 
     let name = args.remove(1);
-    let mut df = vcd2pl(&name);
+    let mut df = vcd2df(&name);
 
     let mut file =
         std::fs::File::create(name.split(".").next().unwrap().to_owned() + ".parquet").unwrap();

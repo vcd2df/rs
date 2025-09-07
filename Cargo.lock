@@ -2248,14 +2248,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rs"
-version = "0.1.0"
-dependencies = [
- "polars",
- "polars-io",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2876,6 +2868,14 @@ dependencies = [
  "getrandom 0.3.3",
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "vcd2df"
+version = "0.1.0"
+dependencies = [
+ "polars",
+ "polars-io",
 ]
 
 [[package]]

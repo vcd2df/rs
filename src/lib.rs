@@ -13,7 +13,7 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-pub fn vcd2pl<P: AsRef<Path>>(filename: P) -> DataFrame {
+pub fn vcd2df<P: AsRef<Path>>(filename: P) -> DataFrame {
     let mut lines = read_lines(filename).expect("File DNE");
     let mut names = BTreeMap::<String, String>::new();
     let mut stage = 0;

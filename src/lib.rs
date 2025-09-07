@@ -17,14 +17,19 @@ pub fn vcd2df<P: AsRef<Path>>(filename: P) -> DataFrame {
     let mut lines = read_lines(filename).expect("File DNE");
     let mut names = BTreeMap::<String, String>::new();
     let mut stage = 0;
-    // Stage 0: Read to `dumpvars`
-    while stage == 0 {
+    // Stage 0: Read to `dumpvars` and first time point
+    while stage < 2 {
         let line = lines
             .next()
             .expect("VCD ill-formed wrt dumpvars.")
             .expect("VCD ill-formed wrt lines.");
+        // Basically, we must see both a dumpvars...
         if line.trim() == "$dumpvars" {
-            stage = 1;
+            stage += 1;
+        }
+        // And a timepoint 0 to progress.
+        if line.trim() == "#0" {
+            stage += 1;
         }
         let mut splits = line.split(" ");
         let word = splits.next().expect("VCD line ill-formed.");
@@ -49,6 +54,8 @@ pub fn vcd2df<P: AsRef<Path>>(filename: P) -> DataFrame {
     let mut time = String::from("#0");
     // Stage 1: Read times into a BTreeMap
     while let Some(Ok(line)) = lines.next() {
+        println!("{}", line);
+        return DataFrame::default();
         if line.chars().nth(0).expect("Line ill-formed") == '#' {
             let tmp: Vec<Option<u64>> = curr.values().cloned().collect();
             times.push(Column::new(time.into(), tmp));

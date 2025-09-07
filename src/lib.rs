@@ -54,8 +54,6 @@ pub fn vcd2df<P: AsRef<Path>>(filename: P) -> DataFrame {
     let mut time = String::from("#0");
     // Stage 1: Read times into a BTreeMap
     while let Some(Ok(line)) = lines.next() {
-        println!("{}", line);
-        return DataFrame::default();
         if line.chars().nth(0).expect("Line ill-formed") == '#' {
             let tmp: Vec<Option<u64>> = curr.values().cloned().collect();
             times.push(Column::new(time.into(), tmp));

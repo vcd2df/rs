@@ -1,6 +1,6 @@
 [package]
 name = "vcd2df"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = """Provides the 'vcd2df' function, which loads a IEEE 1364-1995/2001
     VCD (.vcd) file, specified as a parameter of type string containing exactly

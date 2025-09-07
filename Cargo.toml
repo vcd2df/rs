@@ -2,6 +2,21 @@
 name = "vcd2df"
 version = "0.1.0"
 edition = "2024"
+description = """Provides the 'vcd2df' function, which loads a IEEE 1364-1995/2001
+    VCD (.vcd) file, specified as a parameter of type string containing exactly
+    a file path, and returns an Polars dataframe containing values over time.  
+    A VCD file captures the register values at discrete timepoints from a 
+    simulated trace of execution of a hardware design in Verilog or VHDL.
+    The returned dataframe contains a row for each register, by name, and a
+    column for each time point, specified VCD-style using octothorpe-prefixed 
+    multiples of the timescale as strings. 
+    The only non-trivial implementation details are that (1) VCD 'x' and 'z' 
+    non-numerical values are encoded as null via Arrow nullable integers
+    via the option type and (2) registers with repeated names in distinct 
+    modules are ignored, rather than duplicated, as we anticipate these 
+    registers to have the same values."""
+license = "GPL-3.0-or-later"
+repository = "https://github.com/vcd2df/rs"
 
 [dependencies]
 polars = { version = "0.49.1", features = ["polars-io"] }
